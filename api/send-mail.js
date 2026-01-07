@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
     await resend.emails.send({
       from: 'Quiz-System <onboarding@resend.dev>',
-      to: 'scp080found@gmail.com',
+      to: 'discordpapp@gmail.com',
       subject: `Hasil Quiz: ${data.sn || 'Peserta'}`,
       html: `
         <h1>Hasil Quiz Baru</h1>
