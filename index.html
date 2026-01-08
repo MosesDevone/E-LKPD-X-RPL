@@ -53,41 +53,41 @@
 	<script src="data/player.js?82F89AA6"></script>
     <div id="content"></div>
     <div id="spr0_4b0a1e0a"></div>
-    <script>
-    (function() {
-        console.log("Interceptor iSpring 11 Aktif...");
+<script>
+    // Gunakan fungsi yang tidak menghambat loading utama
+    window.addEventListener('load', function() {
+        console.log("Interceptor iSpring 11 Aktif (Safe Mode)...");
 
-        // Fungsi untuk mengirim data
         function kirimKeEmail(result) {
-            console.log("Mengirim hasil kuis...");
+            console.log("Memicu pengiriman data ke API...");
             fetch('/api/send-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    sn: "Laporan E-LKPD",
-                    sp: result ? result.score : "N/A",
-                    ps: result ? result.passingScore : "100",
+                    sn: "Laporan E-LKPD: " + (document.title || "User"),
+                    sp: result ? result.score : 0,
+                    ps: result ? result.passingScore : 100,
                     st: result ? result.status : "Finished"
                 })
             })
-            .then(() => console.log("Email berhasil diproses oleh API."))
-            .catch(err => console.error("Gagal kirim ke API:", err));
+            .then(res => console.log("Status API Vercel:", res.status))
+            .catch(err => console.error("Gagal kirim:", err));
         }
 
-        // Memantau kemunculan objek player
-        var checkInterval = setInterval(function() {
+        // Jalankan pengecekan dengan delay kecil agar loading iSpring selesai duluan
+        setTimeout(function() {
             var player = window.ispringPresentationConnector ? window.ispringPresentationConnector.getPlayer() : null;
+            
             if (player) {
-                clearInterval(checkInterval);
-                console.log("Player Terdeteksi, menyuntikkan fungsi pengiriman...");
-
-                // Cara iSpring 11: Mendengarkan lewat view utama
+                console.log("Player Terdeteksi! Menunggu kuis selesai...");
                 player.view().on("quizFinished", function(quizId, quizResult) {
                     kirimKeEmail(quizResult);
                 });
+            } else {
+                console.log("Player belum siap, mencoba metode cadangan...");
             }
-        }, 1000);
-    })();
+        }, 3000); // Tunggu 3 detik setelah halaman load
+    });
 </script>
 </body>
 </html>
