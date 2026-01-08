@@ -53,46 +53,43 @@
 	<script src="data/player.js?82F89AA6"></script>
     <div id="content"></div>
     <div id="spr0_4b0a1e0a"></div>
-<script>
-    console.log("Sistem Deteksi Darurat Aktif...");
+    <<script>
+    // 1. Script ini tidak akan jalan sampai loading iSpring selesai total
+    window.addEventListener('load', function() {
+        console.log("Monitor hasil aktif...");
 
-    // Fungsi kirim email
-    function kirimHasil() {
-        if (window.sudahTerkirim) return; // Supaya tidak kirim berkali-kali
-        window.sudahTerkirim = true;
+        var sudahTerkirim = false;
 
-        console.log("DETEKSI SELESAI: Mengirim email...");
-        fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                sn: "Siswa Selesai Mengerjakan E-LKPD",
-                sp: "Cek di Website",
-                ps: "100",
-                st: "Finished"
-            })
-        })
-        .then(() => alert("Data kuis telah terkirim ke email guru!"))
-        .catch(err => console.error("Gagal:", err));
-    }
+        // 2. Fungsi kirim data
+        function laporHasil(skor) {
+            if (sudahTerkirim) return;
+            sudahTerkirim = true;
 
-    // Mengintip perubahan tampilan secara paksa
-    const observer = new MutationObserver((mutations) => {
-        const bodyText = document.body.innerText;
-        // Deteksi kata kunci yang muncul di foto kamu
-        if (bodyText.includes("Your Score") || bodyText.includes("Passing Score") || bodyText.includes("Jangan pantang menyerah")) {
-            kirimHasil();
-            observer.disconnect(); // Berhenti mengintip kalau sudah ketemu
+            fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sn: "Laporan E-LKPD Selesai",
+                    sp: skor || "Lihat Gambar",
+                    ps: "100",
+                    st: "Selesai"
+                })
+            }).then(function() {
+                alert("Berhasil! Hasil kuis sudah terkirim ke email guru.");
+            });
         }
+
+        // 3. Intip layar setiap 2 detik secara mandiri
+        setInterval(function() {
+            var teksLayar = document.body.innerText;
+            
+            // Cek apakah teks hasil sudah muncul di layar
+            if (teksLayar.indexOf("Your Score") !== -1 || teksLayar.indexOf("Jangan pantang menyerah") !== -1) {
+                // Ambil skor jika memungkinkan, jika tidak kirim info default
+                laporHasil();
+            }
+        }, 2000);
     });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // Cadangan: Cek manual setiap 3 detik
-    setInterval(() => {
-        const bodyText = document.body.innerText;
-        if (bodyText.includes("Your Score")) kirimHasil();
-    }, 3000);
 </script>
 </body>
 </html>
