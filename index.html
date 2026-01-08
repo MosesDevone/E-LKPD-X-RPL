@@ -54,40 +54,45 @@
     <div id="content"></div>
     <div id="spr0_4b0a1e0a"></div>
 <script>
-    // Gunakan fungsi yang tidak menghambat loading utama
-    window.addEventListener('load', function() {
-        console.log("Interceptor iSpring 11 Aktif (Safe Mode)...");
+    console.log("Sistem Deteksi Darurat Aktif...");
 
-        function kirimKeEmail(result) {
-            console.log("Memicu pengiriman data ke API...");
-            fetch('/api/send-email', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sn: "Laporan E-LKPD: " + (document.title || "User"),
-                    sp: result ? result.score : 0,
-                    ps: result ? result.passingScore : 100,
-                    st: result ? result.status : "Finished"
-                })
+    // Fungsi kirim email
+    function kirimHasil() {
+        if (window.sudahTerkirim) return; // Supaya tidak kirim berkali-kali
+        window.sudahTerkirim = true;
+
+        console.log("DETEKSI SELESAI: Mengirim email...");
+        fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sn: "Siswa Selesai Mengerjakan E-LKPD",
+                sp: "Cek di Website",
+                ps: "100",
+                st: "Finished"
             })
-            .then(res => console.log("Status API Vercel:", res.status))
-            .catch(err => console.error("Gagal kirim:", err));
-        }
+        })
+        .then(() => alert("Data kuis telah terkirim ke email guru!"))
+        .catch(err => console.error("Gagal:", err));
+    }
 
-        // Jalankan pengecekan dengan delay kecil agar loading iSpring selesai duluan
-        setTimeout(function() {
-            var player = window.ispringPresentationConnector ? window.ispringPresentationConnector.getPlayer() : null;
-            
-            if (player) {
-                console.log("Player Terdeteksi! Menunggu kuis selesai...");
-                player.view().on("quizFinished", function(quizId, quizResult) {
-                    kirimKeEmail(quizResult);
-                });
-            } else {
-                console.log("Player belum siap, mencoba metode cadangan...");
-            }
-        }, 3000); // Tunggu 3 detik setelah halaman load
+    // Mengintip perubahan tampilan secara paksa
+    const observer = new MutationObserver((mutations) => {
+        const bodyText = document.body.innerText;
+        // Deteksi kata kunci yang muncul di foto kamu
+        if (bodyText.includes("Your Score") || bodyText.includes("Passing Score") || bodyText.includes("Jangan pantang menyerah")) {
+            kirimHasil();
+            observer.disconnect(); // Berhenti mengintip kalau sudah ketemu
+        }
     });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Cadangan: Cek manual setiap 3 detik
+    setInterval(() => {
+        const bodyText = document.body.innerText;
+        if (bodyText.includes("Your Score")) kirimHasil();
+    }, 3000);
 </script>
 </body>
 </html>
